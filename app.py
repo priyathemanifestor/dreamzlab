@@ -155,8 +155,44 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif;background:{BG};color:{
 .pb{{background:{BORDER};border-radius:999px;height:8px;margin:8px 0}}
 .pb-fill{{height:8px;border-radius:999px;background:linear-gradient(90deg,{PURPLE},{PINK})}}
 
-/* ── Misc ── */
-hr{{border-color:{BORDER}!important}}
+/* ── Hide radio button dots, style as clean nav ── */
+[data-testid="stRadio"] > div { gap: 2px !important; }
+[data-testid="stRadio"] label {
+    background: transparent !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    cursor: pointer !important;
+    transition: background .15s ease !important;
+    width: 100% !important;
+}
+[data-testid="stRadio"] label:hover { background: rgba(167,139,250,.1) !important; }
+[data-testid="stRadio"] label[data-baseweb="radio"] { background: rgba(167,139,250,.15) !important; }
+[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
+    font-size: .88rem !important;
+    font-weight: 500 !important;
+    color: #f0ecff !important;
+}
+/* Hide the actual radio circle */
+[data-testid="stRadio"] input[type="radio"] { display: none !important; }
+[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child { display: none !important; }
+
+/* ── Sidebar nav buttons ── */
+[data-testid="stSidebar"] [data-testid="stButton"] button {{
+    background: transparent !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: {SUB} !important;
+    font-size: .88rem !important;
+    font-weight: 500 !important;
+    text-align: left !important;
+    padding: 10px 14px !important;
+    width: 100% !important;
+    transition: background .15s ease, color .15s ease !important;
+}}
+[data-testid="stSidebar"] [data-testid="stButton"] button:hover {{
+    background: rgba(167,139,250,.12) !important;
+    color: {TEXT} !important;
+}}
 ::-webkit-scrollbar{{width:5px}}
 ::-webkit-scrollbar-track{{background:{SURF}}}
 ::-webkit-scrollbar-thumb{{background:{BORDER};border-radius:3px}}
@@ -215,25 +251,49 @@ dreams_all  = load_dreams()
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"""
-    <div style="padding:10px 0 18px">
-      <div style="font-size:1.35rem;font-weight:800;color:{TEXT}">✨ DreamzLab</div>
-      <div style="font-size:.72rem;color:{SUB};margin-top:2px">Bring your dreams to reality</div>
+    <div style="padding:16px 0 20px">
+      <div style="font-size:1.4rem;font-weight:800;color:{TEXT};letter-spacing:-.01em">✨ DreamzLab</div>
+      <div style="font-size:.72rem;color:{SUB};margin-top:3px;letter-spacing:.02em">Bring your dreams to reality</div>
     </div>""", unsafe_allow_html=True)
     st.divider()
 
-    page = st.radio("", ["🏠 Home","💭 My Dreams","➕ Add Dream","📊 Progress"],
-                    label_visibility="collapsed")
+    # Clean button navigation
+    nav_items = ["🏠 Home", "💭 My Dreams", "➕ Add Dream", "📊 Progress"]
+    if "page" not in st.session_state:
+        st.session_state.page = "🏠 Home"
+
+    for item in nav_items:
+        is_active = st.session_state.page == item
+        bg = "rgba(167,139,250,.18)" if is_active else "transparent"
+        border = f"1px solid rgba(167,139,250,.3)" if is_active else f"1px solid transparent"
+        color = TEXT if is_active else SUB
+        weight = "600" if is_active else "400"
+        if st.sidebar.button(item, key=f"nav_{item}", use_container_width=True):
+            st.session_state.page = item
+            st.rerun()
+
+    page = st.session_state.page
 
     if dreams_all:
         st.divider()
         total_ms = sum(len(d["milestones"]) for d in dreams_all)
         done_ms  = sum(sum(1 for m in d["milestones"] if m["done"]) for d in dreams_all)
         pct_overall = int(done_ms/total_ms*100) if total_ms else 0
-        st.markdown(f'<div style="font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:{SUB};margin-bottom:8px">OVERALL PROGRESS</div>', unsafe_allow_html=True)
-        st.markdown(f'{pb(pct_overall)}<div style="font-size:.75rem;color:{PURPLE};font-weight:600;margin-top:4px">{pct_overall}% complete</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-size:.65rem;font-weight:700;letter-spacing:.1em;'
+            f'text-transform:uppercase;color:{SUB};margin-bottom:8px">OVERALL PROGRESS</div>'
+            f'{pb(pct_overall)}'
+            f'<div style="font-size:.72rem;color:{PURPLE};font-weight:600;margin-top:4px">'
+            f'{pct_overall}% of all milestones done</div>',
+            unsafe_allow_html=True,
+        )
 
     st.divider()
-    st.markdown(f'<div style="font-size:.72rem;color:{SUB};line-height:2">✨ Dream it<br>📝 Plan it<br>🎯 Do it<br>🏆 Live it</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="font-size:.72rem;color:{SUB};line-height:2.2">'
+        f'✨ Dream it &nbsp; 📝 Plan it &nbsp; 🎯 Do it &nbsp; 🏆 Live it</div>',
+        unsafe_allow_html=True,
+    )
 
 # ══════════════════════════════════════════════════════════════════════════════
 # HOME
