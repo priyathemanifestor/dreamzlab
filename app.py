@@ -156,25 +156,25 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif;background:{BG};color:{
 .pb-fill{{height:8px;border-radius:999px;background:linear-gradient(90deg,{PURPLE},{PINK})}}
 
 /* ── Hide radio button dots, style as clean nav ── */
-[data-testid="stRadio"] > div { gap: 2px !important; }
-[data-testid="stRadio"] label {
+[data-testid="stRadio"] > div {{ gap: 2px !important; }}
+[data-testid="stRadio"] label {{
     background: transparent !important;
     border-radius: 10px !important;
     padding: 10px 14px !important;
     cursor: pointer !important;
     transition: background .15s ease !important;
     width: 100% !important;
-}
-[data-testid="stRadio"] label:hover { background: rgba(167,139,250,.1) !important; }
-[data-testid="stRadio"] label[data-baseweb="radio"] { background: rgba(167,139,250,.15) !important; }
-[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {
+}}
+[data-testid="stRadio"] label:hover {{ background: rgba(167,139,250,.1) !important; }}
+[data-testid="stRadio"] label[data-baseweb="radio"] {{ background: rgba(167,139,250,.15) !important; }}
+[data-testid="stRadio"] div[data-testid="stMarkdownContainer"] p {{
     font-size: .88rem !important;
     font-weight: 500 !important;
     color: #f0ecff !important;
-}
+}}
 /* Hide the actual radio circle */
-[data-testid="stRadio"] input[type="radio"] { display: none !important; }
-[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child { display: none !important; }
+[data-testid="stRadio"] input[type="radio"] {{ display: none !important; }}
+[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {{ display: none !important; }}
 
 /* ── Sidebar nav buttons ── */
 [data-testid="stSidebar"] [data-testid="stButton"] button {{
@@ -200,6 +200,15 @@ div[data-testid="metric-container"]{{background:{CARD};border:1px solid {BORDER}
 [data-testid="stMetricValue"]{{font-size:1.7rem!important;font-weight:800!important}}
 [data-testid="stMetricLabel"]{{font-size:.7rem!important;color:{SUB}!important;text-transform:uppercase;letter-spacing:.06em}}
 .stExpander{{border:1px solid {BORDER}!important;border-radius:14px!important;background:{CARD}!important}}
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 768px) {{
+  .hero{{padding:32px 24px}}
+  .hero-title{{font-size:1.8rem}}
+  .hero-sub{{font-size:.88rem}}
+  .dcard-img, .dcard-img-placeholder{{height:120px}}
+  .scard-val{{font-size:1.6rem}}
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -222,9 +231,6 @@ def dream_card(dream):
     img_url = info["img"]
     emoji = info["emoji"]
     color = info["color"]
-
-    img_html = (f'<img src="{img_url}" class="dcard-img" onerror="this.style.display=\'none\'">'
-                f'<div class="dcard-img-placeholder" style="display:none;background:{CARD2}">{emoji}</div>')
 
     st.markdown(f"""
     <div class="dcard">
@@ -263,11 +269,6 @@ with st.sidebar:
         st.session_state.page = "🏠 Home"
 
     for item in nav_items:
-        is_active = st.session_state.page == item
-        bg = "rgba(167,139,250,.18)" if is_active else "transparent"
-        border = f"1px solid rgba(167,139,250,.3)" if is_active else f"1px solid transparent"
-        color = TEXT if is_active else SUB
-        weight = "600" if is_active else "400"
         if st.sidebar.button(item, key=f"nav_{item}", use_container_width=True):
             st.session_state.page = item
             st.rerun()
@@ -384,7 +385,29 @@ elif page == "💭 My Dreams":
           <div style="font-size:.85rem;color:{SUB};margin-top:8px">Head to "➕ Add Dream" to plant your first seed 🌱</div>
         </div>""", unsafe_allow_html=True)
     else:
-        for dream in dreams_all:
+        # ── Search & filter ──
+        fc1, fc2 = st.columns([2, 1])
+        with fc1:
+            search = st.text_input("Search", placeholder="🔍 Search dreams by title or keyword…",
+                                    label_visibility="collapsed")
+        with fc2:
+            all_cats = sorted(set(get_category(d["title"], d.get("description","")) for d in dreams_all))
+            cat_filter = st.selectbox("Category", ["All categories"] + all_cats, label_visibility="collapsed")
+
+        filtered = dreams_all
+        if search:
+            s = search.lower()
+            filtered = [d for d in filtered if s in d["title"].lower() or s in d.get("description","").lower()]
+        if cat_filter != "All categories":
+            filtered = [d for d in filtered if get_category(d["title"], d.get("description","")) == cat_filter]
+
+        if not filtered:
+            st.markdown(f"""
+            <div style="text-align:center;padding:40px 20px;background:{CARD};border:1px solid {BORDER};border-radius:14px;margin-top:12px">
+              <div style="font-size:.9rem;color:{SUB}">No dreams match your search or filter.</div>
+            </div>""", unsafe_allow_html=True)
+
+        for dream in filtered:
             pct     = get_progress(dream)
             ms_done = sum(1 for m in dream["milestones"] if m["done"])
             ms_total= len(dream["milestones"])
@@ -405,7 +428,7 @@ elif page == "💭 My Dreams":
                 for ms in dream["milestones"]:
                     c1, c2 = st.columns([0.06, 0.94])
                     with c1:
-                        checked = st.checkbox("", value=ms["done"], key=f"ms_{ms['id']}")
+                        checked = st.checkbox("", value=ms["done"], key=f"ms_{dream['id']}_{ms['id']}")
                         if checked != ms["done"]:
                             toggle_milestone(dream["id"], ms["id"])
                             st.rerun()
@@ -415,15 +438,30 @@ elif page == "💭 My Dreams":
                         st.markdown(f'<div style="padding:7px 0;font-size:.85rem;{style}">{icon2} {ms["text"]}</div>', unsafe_allow_html=True)
 
                 st.markdown("<div style='margin-top:10px'></div>", unsafe_allow_html=True)
-                with st.form(key=f"add_ms_{dream['id']}"):
+                with st.form(key=f"add_ms_{dream['id']}", clear_on_submit=True):
                     nm = st.text_input("", placeholder="Add a new milestone…", label_visibility="collapsed")
                     if st.form_submit_button("➕ Add Milestone") and nm.strip():
                         add_milestone(dream["id"], nm.strip())
                         st.rerun()
 
-                if st.button("🗑️ Delete dream", key=f"del_{dream['id']}"):
-                    delete_dream(dream["id"])
-                    st.rerun()
+                # Two-step delete confirmation
+                del_key = f"confirm_del_{dream['id']}"
+                if st.session_state.get(del_key):
+                    st.warning(f"Delete “{dream['title']}” permanently? This can't be undone.")
+                    cc1, cc2 = st.columns(2)
+                    with cc1:
+                        if st.button("✅ Yes, delete it", key=f"yes_{dream['id']}", use_container_width=True):
+                            delete_dream(dream["id"])
+                            st.session_state.pop(del_key, None)
+                            st.rerun()
+                    with cc2:
+                        if st.button("Cancel", key=f"cancel_{dream['id']}", use_container_width=True):
+                            st.session_state.pop(del_key, None)
+                            st.rerun()
+                else:
+                    if st.button("🗑️ Delete dream", key=f"del_{dream['id']}"):
+                        st.session_state[del_key] = True
+                        st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
 # ADD DREAM
@@ -439,9 +477,12 @@ elif page == "➕ Add Dream":
             Describe your dream and we'll build your personalised roadmap</div>
         </div>""", unsafe_allow_html=True)
 
-        with st.form("add_dream_form"):
-            title = st.text_input("What's your dream? *",
-                placeholder="e.g. Run a marathon, Launch a startup, Learn Spanish…")
+        # Title lives OUTSIDE the form so the category preview updates live as you type
+        title = st.text_input("What's your dream? *",
+            placeholder="e.g. Run a marathon, Launch a startup, Learn Spanish…",
+            key="dream_title_input")
+
+        with st.form("add_dream_form", clear_on_submit=True):
             description = st.text_area("Tell us more *",
                 placeholder="Describe your dream in detail. What does success look like to you?",
                 height=130)
@@ -468,10 +509,12 @@ elif page == "➕ Add Dream":
                 dream = add_dream(title.strip(), description.strip(), milestones)
                 st.success(f"✨ Dream added with {len(milestones)} personalised milestones!")
                 st.balloons()
+                st.session_state.dream_title_input = ""
+                st.rerun()
 
     with rc:
-        # Preview panel
-        cat  = get_category(title if 'title' in dir() and title else "", "")
+        # Preview panel — now updates live as the title field changes
+        cat  = get_category(title, "")
         info = CATEGORIES.get(cat, CATEGORIES["default"])
         st.markdown(f"""
         <div style="background:{CARD};border:1px solid {BORDER};border-radius:18px;overflow:hidden;margin-top:52px">
@@ -481,7 +524,7 @@ elif page == "➕ Add Dream":
             <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{info["color"]};margin-bottom:8px">
               {info["emoji"]} Dream Category Preview</div>
             <div style="font-size:.85rem;color:{SUB};line-height:1.6">
-              Fill in your dream title and description on the left — we'll automatically detect your
+              Start typing your dream title on the left — we'll automatically detect your
               category and generate personalised milestones for you. 🎯</div>
             <div style="margin-top:16px;padding:14px;background:{CARD2};border-radius:10px;
                  border-left:3px solid {PURPLE}">
@@ -592,3 +635,7 @@ elif page == "📊 Progress":
 # ── Footer ─────────────────────────────────────────────────────────────────────
 st.divider()
 st.markdown(f'<div style="text-align:center;font-size:.72rem;color:{SUB}">✨ DreamzLab · Bring your dreams to reality · Built with 💜</div>', unsafe_allow_html=True)
+
+
+
+
