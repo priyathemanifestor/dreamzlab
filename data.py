@@ -110,21 +110,94 @@ MILESTONE_SUGGESTIONS = {
     ],
 }
 
-def get_category_milestones(dream_text: str) -> list:
-    text = dream_text.lower()
-    if any(w in text for w in ["job", "career", "work", "promotion", "business", "startup"]):
-        return MILESTONE_SUGGESTIONS["career"]
-    if any(w in text for w in ["health", "fit", "weight", "exercise", "gym", "run", "diet"]):
-        return MILESTONE_SUGGESTIONS["health"]
-    if any(w in text for w in ["learn", "study", "skill", "course", "degree", "language"]):
-        return MILESTONE_SUGGESTIONS["learning"]
-    if any(w in text for w in ["money", "save", "invest", "debt", "financial", "rich", "wealth"]):
-        return MILESTONE_SUGGESTIONS["financial"]
-    if any(w in text for w in ["relationship", "love", "family", "friend", "social", "connect"]):
-        return MILESTONE_SUGGESTIONS["relationship"]
-    if any(w in text for w in ["art", "music", "write", "creative", "paint", "design", "film"]):
-        return MILESTONE_SUGGESTIONS["creative"]
-    return MILESTONE_SUGGESTIONS["default"]
+def generate_specific_milestones(title: str, description: str) -> list:
+    """
+    Generate milestones that are specific to the user's actual dream.
+    Uses the title and description to build personalised, actionable steps
+    rather than returning generic category templates.
+    """
+    t = title.strip()
+    d = description.strip()
+    text = f"{t} {d}".lower()
+
+    milestones = []
+
+    # ── Step 1: Always start with a clarity/definition milestone ─────────────
+    milestones.append(
+        f"Write down exactly what '{t}' means to you — what does success look like in 6 months?"
+    )
+
+    # ── Step 2: Research milestone specific to the dream ─────────────────────
+    if any(w in text for w in ["marathon", "run", "race", "5k", "10k", "triathlon"]):
+        milestones.append("Research a training plan (Couch to 5K, Hal Higdon, etc.) and pick a target race date")
+    elif any(w in text for w in ["startup", "business", "company", "entrepreneur", "launch", "product"]):
+        milestones.append(f"Talk to 10 potential customers about the problem '{t}' solves — validate before building")
+    elif any(w in text for w in ["book", "novel", "write", "author", "publish"]):
+        milestones.append("Research your target genre — read 3 bestsellers in it and note what makes them work")
+    elif any(w in text for w in ["learn", "speak", "language", "fluent", "spanish", "french", "mandarin"]):
+        milestones.append("Choose one learning method (Duolingo, italki tutor, immersion) and commit to 20 min/day")
+    elif any(w in text for w in ["invest", "stock", "crypto", "wealth", "financial", "money", "save"]):
+        milestones.append("Read one foundational book (The Psychology of Money, Rich Dad Poor Dad) cover to cover")
+    elif any(w in text for w in ["lose weight", "diet", "nutrition", "eat", "calories", "keto", "vegan"]):
+        milestones.append("Track everything you eat for 7 days using MyFitnessPal — no changes yet, just awareness")
+    elif any(w in text for w in ["code", "developer", "software", "app", "program", "engineer"]):
+        milestones.append("Complete one structured project (freeCodeCamp, The Odin Project) from start to finish")
+    elif any(w in text for w in ["music", "sing", "guitar", "piano", "album", "song", "record"]):
+        milestones.append("Record a rough demo of your first original piece — quality doesn't matter, starting does")
+    elif any(w in text for w in ["travel", "trip", "visit", "move", "country", "abroad", "expat"]):
+        milestones.append(f"Research visa requirements, average costs, and 3 specific locations for '{t}'")
+    elif any(w in text for w in ["degree", "university", "college", "study", "graduate", "phd", "masters"]):
+        milestones.append("Identify 5 programs that match your goal and note their application deadlines and requirements")
+    else:
+        milestones.append(f"Research 3 people who have already achieved something similar to '{t}' — study their path")
+
+    # ── Step 3: First concrete action ────────────────────────────────────────
+    if any(w in text for w in ["marathon", "run", "race", "5k", "10k"]):
+        milestones.append("Complete your first training run this week — even 10 minutes counts as starting")
+    elif any(w in text for w in ["startup", "business", "company", "launch"]):
+        milestones.append("Build and ship a minimum viable version in 2 weeks — something real users can try")
+    elif any(w in text for w in ["book", "novel", "write", "author"]):
+        milestones.append("Write the first 500 words of your book this week — don't edit, just write")
+    elif any(w in text for w in ["learn", "language", "fluent", "skill", "course"]):
+        milestones.append("Complete your first lesson or session today — momentum starts with one step")
+    elif any(w in text for w in ["invest", "save", "financial", "money"]):
+        milestones.append("Open a dedicated savings or investment account this week and make your first deposit")
+    elif any(w in text for w in ["fitness", "gym", "workout", "exercise", "weight", "diet"]):
+        milestones.append("Complete 3 workouts this week — schedule them in your calendar like appointments")
+    elif any(w in text for w in ["code", "developer", "app", "software"]):
+        milestones.append("Build and deploy one tiny project this week — a webpage, a script, anything live")
+    else:
+        milestones.append(f"Take one concrete action toward '{t}' before the end of this week — no matter how small")
+
+    # ── Step 4: Build a support system ───────────────────────────────────────
+    if any(w in text for w in ["marathon", "run", "fitness", "gym", "workout"]):
+        milestones.append("Find a running group, gym partner, or accountability buddy to train with weekly")
+    elif any(w in text for w in ["startup", "business", "entrepreneur"]):
+        milestones.append("Join a startup community (YC Startup School, local founder meetup) and introduce yourself")
+    elif any(w in text for w in ["write", "book", "author", "creative"]):
+        milestones.append("Join a writing group or find a critique partner who will read your work honestly")
+    elif any(w in text for w in ["learn", "course", "skill", "language", "code"]):
+        milestones.append("Join an online community (Discord, Reddit, Meetup) of people learning the same thing")
+    else:
+        milestones.append("Tell one trusted person about your dream and ask them to check in with you monthly")
+
+    # ── Step 5: Measure and review ────────────────────────────────────────────
+    if any(w in text for w in ["marathon", "race", "5k", "10k", "triathlon"]):
+        milestones.append("Track every training run — after 4 weeks, review your pace and distance improvement")
+    elif any(w in text for w in ["startup", "business", "revenue", "customers"]):
+        milestones.append("Hit your first revenue or user milestone — even $1 or 1 paying user proves the idea works")
+    elif any(w in text for w in ["book", "write", "novel"]):
+        milestones.append("Complete a full first draft — give yourself a deadline and protect that writing time daily")
+    elif any(w in text for w in ["save", "invest", "financial", "wealth"]):
+        milestones.append("Review your finances monthly — are you on track? Adjust your plan based on what you see")
+    elif any(w in text for w in ["learn", "language", "skill", "course"]):
+        milestones.append("Complete your first assessment or project — show yourself (and others) what you've learned")
+    else:
+        milestones.append(
+            f"30-day review: assess your progress toward '{t}', celebrate wins, and adjust what isn't working"
+        )
+
+    return milestones
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────

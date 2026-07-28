@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data import (
     load_dreams, add_dream, toggle_milestone, delete_dream,
     add_milestone, get_daily_affirmation, get_progress,
-    get_category_milestones,
+    generate_specific_milestones,
 )
 
 # ── Page config ───────────────────────────────────────────────────────────────
@@ -448,11 +448,11 @@ elif page == "➕ Add Dream":
             st.error("Please fill in both the title and description.")
         else:
             if milestone_mode == "✨ Suggest milestones for me":
-                milestones = get_category_milestones(title + " " + description)
+                milestones = generate_specific_milestones(title.strip(), description.strip())
             else:
                 milestones = [m.strip() for m in custom_milestones.split("\n") if m.strip()]
                 if not milestones:
-                    milestones = get_category_milestones(title + " " + description)
+                    milestones = generate_specific_milestones(title.strip(), description.strip())
 
             dream = add_dream(title.strip(), description.strip(), milestones)
             st.success(f"✨ Dream added! {len(milestones)} milestones created.")
